@@ -5,7 +5,7 @@ import streamlit as st
 
 from action_language import Action, State
 
-ROUND_BRACKETS_PATTERN = re.compile(r'\(\s*([A-Z]+),\s*([A-Za-z]+)\s*\)')
+ROUND_BRACKETS_PATTERN = re.compile(r'\(\s*([A-Za-z]+),\s*([A-Za-z]+)\s*\)')
 
 
 # Initialize session state
