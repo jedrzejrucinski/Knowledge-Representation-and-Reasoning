@@ -190,73 +190,11 @@ with Q1:
 
         st.session_state['current_tab'] = 'Q1'
 
-        q1_program, goal_q1 = parse_after_statements(q1_statements)
-        st.session_state['program_dict']['q1_program'] = q1_program
+        if len(st.session_state['program_dict']['executed_program']) == 0:
+            q1_program, goal_q1 = parse_after_statements(q1_statements)
+            st.session_state['program_dict']['q1_program'] = q1_program
 
-        all_fluents = set(st.session_state['fluent_dict'].keys())
-        for action in list(st.session_state['action_dict'].keys()):
-            all_fluents = all_fluents.union(set(
-                st.session_state['action_dict'][action]['effects'].keys()
-                ))
-
-            all_fluents = all_fluents.union(set(
-                st.session_state['action_dict'][action]['preconditions'].keys()
-                ))
-
-        values = [[True, False] for _ in all_fluents]
-        combinations = set(itertools.product(*values))
-        combinations_as_dicts = [
-            dict(zip(all_fluents, combination))
-            for combination in combinations
-            ]
-
-        possible_combs = []
-        final_combs = []
-        # st.write("===========================================================")
-        # st.write(f"Possible initiall combinations for after statement program : \
-                #  {st.session_state['goals_dict']} after {st.session_state['program_dict']['executed_program']}:")
-
-        for comb in combinations_as_dicts:
-            state = State(comb)
-            program_data = st.session_state['program_dict']['executed_program']
-            last_fluents = state.copy()
-            for steps in program_data:
-                action_key = f"{steps['action']} by {steps['agent']}"
-
-                if action_key not in st.session_state['action_dict']:
-                    raise ValueError(f"Action '{action_key}' does not exist")
-
-                name = action_key
-                action = Action(
-                    name,
-                    st.session_state['action_dict'][name]['preconditions'],
-                    st.session_state['action_dict'][name]['effects'],
-                    steps['agent']
-                    )
-
-                action.execute(state, steps['agent'])
-                new_fluents = state.copy()
-
-            # HERE
-            result = compare_final_state_with_goal(
-                new_fluents,
-                st.session_state['goals_dict']
-                )
-
-            if result == 'Yes':
-                st.write(f"Possible comb: {last_fluents} ")
-                possible_combs.append(last_fluents)
-            # It is really stupid!!!
-            # final_combs is always 0 in this moment
-            # And final_combs is zero when 
-            # TODO: results when 'No' never used
-
-        # st.write("===========================================================")
-        # st.write(f"Possible result combinations for after statement program : \
-                        # {goal_q1} after {st.session_state['program_dict']['q1_program']}:")
-
-        for comb in possible_combs:
-            state = State(comb.get_fluents())
+            state = State(st.session_state['fluent_dict'])
             program_q1_data = st.session_state['program_dict']['q1_program']
             last_fluents = state.copy()
 
@@ -274,18 +212,107 @@ with Q1:
 
                 action.execute(state, steps_q1['agent'])
                 new_fluents_q1 = state.copy()
-
             if compare_final_state_with_goal(new_fluents_q1, goal_q1) == 'Yes':
-                # print("OH YESSSZ")  # nie wykonuje się i tak xd
-                st.write(f"Final comb: {new_fluents_q1} ")
-                final_combs.append(new_fluents_q1)
-
-        if len(final_combs) == len(possible_combs):
-            st.write("**YES Q1**")
-        elif len(final_combs) == 0:
-            st.write("**NO Q1**")
+                st.write("**YES Q1**")
+            else:
+                st.write("**NO Q1**")
         else:
-            st.write("**Condition holds after executing the program for some possible combinations**")
+            q1_program, goal_q1 = parse_after_statements(q1_statements)
+            st.session_state['program_dict']['q1_program'] = q1_program
+
+            all_fluents = set(st.session_state['fluent_dict'].keys())
+            for action in list(st.session_state['action_dict'].keys()):
+                all_fluents = all_fluents.union(set(
+                    st.session_state['action_dict'][action]['effects'].keys()
+                    ))
+
+                all_fluents = all_fluents.union(set(
+                    st.session_state['action_dict'][action]['preconditions'].keys()
+                    ))
+
+            values = [[True, False] for _ in all_fluents]
+            combinations = set(itertools.product(*values))
+            combinations_as_dicts = [
+                dict(zip(all_fluents, combination))
+                for combination in combinations
+                ]
+
+            possible_combs = []
+            final_combs = []
+            # st.write("===========================================================")
+            # st.write(f"Possible initiall combinations for after statement program : \
+                    #  {st.session_state['goals_dict']} after {st.session_state['program_dict']['executed_program']}:")
+
+            for comb in combinations_as_dicts:
+                state = State(comb)
+                program_data = st.session_state['program_dict']['executed_program']
+                last_fluents = state.copy()
+                for steps in program_data:
+                    action_key = f"{steps['action']} by {steps['agent']}"
+
+                    if action_key not in st.session_state['action_dict']:
+                        raise ValueError(f"Action '{action_key}' does not exist")
+
+                    name = action_key
+                    action = Action(
+                        name,
+                        st.session_state['action_dict'][name]['preconditions'],
+                        st.session_state['action_dict'][name]['effects'],
+                        steps['agent']
+                        )
+
+                    action.execute(state, steps['agent'])
+                    new_fluents = state.copy()
+
+                # HERE
+                result = compare_final_state_with_goal(
+                    new_fluents,
+                    st.session_state['goals_dict']
+                    )
+
+                if result == 'Yes':
+                    st.write(f"Possible comb: {last_fluents} ")
+                    possible_combs.append(last_fluents)
+                # It is really stupid!!!
+                # final_combs is always 0 in this moment
+                # And final_combs is zero when 
+                # TODO: results when 'No' never used
+
+            # st.write("===========================================================")
+            # st.write(f"Possible result combinations for after statement program : \
+                            # {goal_q1} after {st.session_state['program_dict']['q1_program']}:")
+
+            for comb in possible_combs:
+                state = State(comb.get_fluents())
+                program_q1_data = st.session_state['program_dict']['q1_program']
+                last_fluents = state.copy()
+
+                for steps_q1 in program_q1_data:
+                    action_key = f"{steps_q1['action']} by {steps_q1['agent']}"
+                    if action_key not in st.session_state['action_dict']:
+                        raise ValueError(f"Action '{action_key}' does not exist")
+
+                    action = Action(
+                        action_key,
+                        st.session_state['action_dict'][action_key]['preconditions'],
+                        st.session_state['action_dict'][action_key]['effects'],
+                        steps_q1['agent']
+                        )
+
+                    action.execute(state, steps_q1['agent'])
+                    new_fluents_q1 = state.copy()
+
+                if compare_final_state_with_goal(new_fluents_q1, goal_q1) == 'Yes':
+                    # print("OH YESSSZ")  # nie wykonuje się i tak xd
+                    st.write(f"Final comb: {new_fluents_q1} ")
+                    final_combs.append(new_fluents_q1)
+
+            if len(final_combs) == len(possible_combs):
+                st.write("**YES Q1**")
+            elif len(final_combs) == 0:
+                st.write("**NO Q1**")
+            else:
+                st.write("**Condition holds after executing the program for some possible combinations**")
 
 with Q2:
     st.write("**Run program to get answer for Q2: Was an agent involved in the program?**")
@@ -339,6 +366,8 @@ with Q2:
             st.write("**YES**")
         else:
             st.write("**NO**")
+
+
 
 # Display the current state of all fluents in the sidebar
 st.sidebar.header('Current State')
